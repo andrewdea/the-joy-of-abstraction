@@ -1,0 +1,14 @@
+# Mac OS
+.DS_Store
+
+# IDE - Emacs
+*~
+\#*\#
+*.dir-locals.el
+
+# clojure
+.clj-kondo/
+.lsp/
+
+# clojurescript
+resources/
