@@ -22,7 +22,8 @@
   (let [num 4]
     {:num num
      :start (q/millis)
-     :displayed-num num}))
+     :displayed-num (str num)
+     :awaiting-input false}))
 
 (defn within-plus-circle? []
   (and (> (q/mouse-x) 325)
@@ -42,25 +43,82 @@
        (> (q/mouse-y) 450)
        (< (q/mouse-y) 650)))
 
+
+(defn check-time [start & {:keys [wait] :or {wait 100}}]
+  (> (- (q/millis) start) wait))
+
+(defn check-keyboard [{:keys [num displayed-num start awaiting-input]
+                       :as state}]
+  ;; (js/console.log "in check keyboard")
+  ;; (js/console.log "awaiting-input : " awaiting-input)
+  ;; (js/console.log "displayed-num : " displayed-num)
+  ;; (js/console.log "(type displayed-num) : " (type displayed-num))
+  ;; (js/console.log "(re-matches digit displayed-num) : " (re-matches
+  ;; #"\d*" displayed-num))
+  (if (and awaiting-input (q/key-pressed?) (check-time start :gap
+                                                       150))
+    (let [key (q/raw-key)]
+      ;; (js/console.log "(q/raw-key) : " (q/raw-key))
+      ;; (js/console.log "key-code : " key-code)
+      ;; (js/console.log "(= 8 key-code) : " (= 8 key-code))
+      (js/console.log "displayed-num : " displayed-num)
+      (js/console.log "parsed: " (if (re-matches #"\d*" displayed-num) (js/parseInt displayed-num) num))
+      (cond
+        (= "\r" key)
+        {:num (if (re-matches #"\d*" displayed-num) (js/parseInt displayed-num) num)
+         :displayed-num
+         (if (re-matches #"\d*" displayed-num) displayed-num (str num))
+         :start (q/millis)
+         :awaiting-input false}
+        (= "Backspace" key)
+          (if (= "..." displayed-num)
+          {:num num
+           :displayed-num (str num)
+           :start (q/millis)
+           :awaiting-input false}
+          {:num num
+           :displayed-num (if (> (.-length displayed-num) 1)
+                            (subs displayed-num 0 (- (.-length displayed-num) 1))
+                            "...")
+           :start (q/millis)
+           :awaiting-input awaiting-input})
+        (re-matches #"\d*" key)
+        {:num num
+         :displayed-num (str
+                         (if (re-matches #"\d*" displayed-num) displayed-num "")
+                         key)
+         :start (q/millis)
+         :awaiting-input awaiting-input}
+        :else
+        {:num num
+         :displayed-num (str num)
+         :start start
+         :awaiting-input false}
+        ))
+    state))
+
 (defn update-state [{:keys [num start] :as state}]
-  (if (and (q/mouse-pressed?) (> (- (q/millis) start) 100))
+  (if (and (q/mouse-pressed?) (check-time start))
     (cond
       (within-plus-circle?) {:num (+ 1 num)
                              :start (q/millis)
-                             :displayed-num (+ 1 num)}
+                             :displayed-num (str (+ 1 num))
+                             :awaiting-input false}
       (within-minus-circle?) {:num (if (> num 0)
                                      (- num 1)
                                      num)
                               :start (q/millis)
                               :displayed-num
-                              (if (> num 0)
+                              (str (if (> num 0)
                                      (- num 1)
-                                     num)}
+                                     num))
+                              :awaiting-input false}
       (within-text-box?) {:num num
                           :start start
-                          :displayed-num "..."}
+                          :displayed-num "..."
+                          :awaiting-input true}
       :else state)
-    state))
+    (check-keyboard state)))
 
 ;; (defn draw-state [state]
 ;;   ; Clear the sketch by filling it with light-grey color.
@@ -126,9 +184,11 @@
         (q/text-align :center)
         (q/text text x y)))))
 
-(defn box-with-num [displayed-num]
+(defn box-with-num [displayed-num awaiting-input]
   ;; rectangle
-  (q/fill 0 0 200)
+  (if awaiting-input
+    (q/fill 0 0 255)
+    (q/fill 0 0 200))
   (q/rect 175 500 150 100 20)
   ;; write number
   (q/text-size 20)
@@ -150,7 +210,7 @@
   (q/text-align :center)
   (q/text "-" 140 550))
 
-(defn draw-state [{:keys [num displayed-num]}]
+(defn draw-state [{:keys [num displayed-num awaiting-input]}]
   ; Clear the sketch by filling it with light-grey color.
   (q/background 180 100 100)
   ; Set circle color.
@@ -164,7 +224,7 @@
   ;; (draw-circle-with-text 250 450 20 "2")
 
   (circles-around num 200)
-  (box-with-num displayed-num))
+  (box-with-num displayed-num awaiting-input))
 
 ; this function is called in index.html
 (defn ^:export run-sketch []
