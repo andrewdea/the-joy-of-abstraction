@@ -171,9 +171,7 @@
             y (+ 250 (* outer-radius (Math/sin angle)))
             circle-color-value
             (/ (* (+ (/ Math/PI 2) angle) (/ 255 Math/PI)) 2)
-            text (str (if (= 0 i)
-                  num
-                  i))]
+            text (str (+ 1 i))]
         ;; draw the outline of the small circle
         (q/stroke 255)
         ;; (q/fill nil)
@@ -198,14 +196,18 @@
   (q/text-align :center)
   (q/text displayed-num 250 550)
   ;; circles (buttons to-be) on each side
-  (q/fill 0 0 180)
+  (if (and (q/mouse-pressed?) (within-plus-circle?))
+    (q/fill 0 0 200)
+    (q/fill 0 0 180))
   (q/ellipse 360 550 70 70)
-  (apply q/fill [0,0,0])
+  (q/fill 0 0 0)
   (q/text-size 20)
   (q/text-align :center)
   (q/text "+" 360 550)
 
-  (q/fill 0 0 180)
+  (if (and (q/mouse-pressed?) (within-minus-circle?))
+    (q/fill 0 0 200)
+    (q/fill 0 0 180))
   (q/ellipse 140 550 70 70)
   (apply q/fill [0,0,0])
   (q/text-size 20)
