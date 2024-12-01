@@ -94,13 +94,15 @@
                    (* i (/ (* 2 Math/PI) num))) ; Increment clockwise
             x (+ 250 (* outer-radius (Math/cos angle)))
             y (+ 250 (* outer-radius (Math/sin angle)))
+            circle-color-value
+            (/ (* (+ (/ Math/PI 2) angle) (/ 255 Math/PI)) 2)
             text (str (if (= 0 i)
                   num
-                  i) ", angle: " angle 255)]
+                  i))]
         ;; draw the outline of the small circle
         (q/stroke 255)
         ;; (q/fill nil)
-        (q/fill (mod i 255) 255 255)
+        (q/fill circle-color-value 255 255)
         (q/ellipse x y
                    radius radius)
         ;; write the circle's number
@@ -111,6 +113,7 @@
 
 (defn box-with-num [num]
   ;; rectangle
+  (q/fill 0 0 200)
   (q/rect 175 500 150 100 20)
   ;; write number
   (q/text-size 20)
@@ -118,14 +121,14 @@
   (q/text-align :center)
   (q/text num 250 550)
   ;; circles (buttons to-be) on each side
-  (apply q/fill [255,255,255])
+  (q/fill 0 0 180)
   (q/ellipse 360 550 70 70)
   (apply q/fill [0,0,0])
   (q/text-size 20)
   (q/text-align :center)
   (q/text "+" 360 550)
 
-  (apply q/fill [255,255,255])
+  (q/fill 0 0 180)
   (q/ellipse 140 550 70 70)
   (apply q/fill [0,0,0])
   (q/text-size 20)
@@ -134,9 +137,9 @@
 
 (defn draw-state [{:keys [num]}]
   ; Clear the sketch by filling it with light-grey color.
-  (q/background 240)
+  (q/background 180 100 100)
   ; Set circle color.
-  (q/fill 0 255 255)
+  (q/fill 0 0 255)
   ;; draw circle
   (q/ellipse 250 250 500 500)
   ;; (q/text-size 35)
