@@ -17,6 +17,8 @@
   ;; (q/frame-rate 20)
   ;; (q/text-font (q/create-font "DejaVu Sans" 28 true))
   (q/background 20) ; dark screen background
+  ;; Set color mode to HSB (HSV) instead of default RGB.
+  (q/color-mode :hsb)
   {:num 4})
 
 (defn within-plus-circle? []
@@ -91,19 +93,21 @@
             (+ (/ Math/PI -2) ; Start at the top (-90 degrees)
                    (* i (/ (* 2 Math/PI) num))) ; Increment clockwise
             x (+ 250 (* outer-radius (Math/cos angle)))
-            y (+ 250 (* outer-radius (Math/sin angle)))]
+            y (+ 250 (* outer-radius (Math/sin angle)))
+            text (str (if (= 0 i)
+                  num
+                  i) ", angle: " angle 255)]
         ;; draw the outline of the small circle
         (q/stroke 255)
-        (q/fill nil)
+        ;; (q/fill nil)
+        (q/fill (mod i 255) 255 255)
         (q/ellipse x y
                    radius radius)
-        (apply q/fill [255,255,255])
         ;; write the circle's number
+        (q/fill 0 0 0)
         (q/text-size 20)
         (q/text-align :center)
-        (q/text (if (= 0 i)
-                  num
-                  i) x y)))))
+        (q/text text x y)))))
 
 (defn box-with-num [num]
   ;; rectangle
@@ -132,7 +136,7 @@
   ; Clear the sketch by filling it with light-grey color.
   (q/background 240)
   ; Set circle color.
-  (q/fill 0 139 139)
+  (q/fill 0 255 255)
   ;; draw circle
   (q/ellipse 250 250 500 500)
   ;; (q/text-size 35)
