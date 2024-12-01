@@ -12,17 +12,38 @@
 ;;   {:color 0
 ;;    :angle 0})
 
-(defn setup
-  []
+(defn setup []
   (q/smooth)
   ;; (q/frame-rate 20)
   ;; (q/text-font (q/create-font "DejaVu Sans" 28 true))
-  (q/background 20))  ; dark screen background
+  (q/background 20) ; dark screen background
+  {:num 4})
 
-(defn update-state [state]
-  ; Update sketch state by changing circle color and position.
-  {:color (mod (+ (:color state) 0.7) 255)
-   :angle (+ (:angle state) 0.1)})
+(defn within-plus-circle? []
+  (and (> (q/mouse-x) 325)
+       (< (q/mouse-x) 395)
+       (> (q/mouse-y) 515)
+       (< (q/mouse-y) 585)))
+
+(defn within-minus-circle? []
+  (and (> (q/mouse-x) 105)
+       (< (q/mouse-x) 175)
+       (> (q/mouse-y) 515)
+       (< (q/mouse-y) 585)))
+
+
+(defn update-state [{:keys [num] :as state}]
+  ;; TODO use millis to slow down the rate of change here: one click
+  ;; should reasonably be one inc/decrement
+  (if (q/mouse-pressed?)
+    (cond
+      (within-plus-circle?) {:num (+ 1 num)}
+      ;; TODO using abs here to avoid weird stuff with negative numbers
+      (within-minus-circle?) {:num (if (> num 0)
+                                     (- num 1)
+                                     num)}
+      :else state)
+    state))
 
 ;; (defn draw-state [state]
 ;;   ; Clear the sketch by filling it with light-grey color.
@@ -69,8 +90,6 @@
       (let [angle
             (+ (/ Math/PI -2) ; Start at the top (-90 degrees)
                    (* i (/ (* 2 Math/PI) num))) ; Increment clockwise
-            ;; (*
-            ;;        (/ Math/PI (/ num 2)) (+ 1 i))  ; Angle for each circle
             x (+ 250 (* outer-radius (Math/cos angle)))
             y (+ 250 (* outer-radius (Math/sin angle)))]
         ;; draw the outline of the small circle
@@ -86,13 +105,35 @@
                   num
                   i) x y)))))
 
+(defn box-with-num [num]
+  ;; rectangle
+  (q/rect 175 500 150 100 20)
+  ;; write number
+  (q/text-size 20)
+  (apply q/fill [0,0,0])
+  (q/text-align :center)
+  (q/text num 250 550)
+  ;; circles (buttons to-be) on each side
+  (apply q/fill [255,255,255])
+  (q/ellipse 360 550 70 70)
+  (apply q/fill [0,0,0])
+  (q/text-size 20)
+  (q/text-align :center)
+  (q/text "+" 360 550)
 
-(defn draw-state []
+  (apply q/fill [255,255,255])
+  (q/ellipse 140 550 70 70)
+  (apply q/fill [0,0,0])
+  (q/text-size 20)
+  (q/text-align :center)
+  (q/text "-" 140 550))
+
+(defn draw-state [{:keys [num]}]
   ; Clear the sketch by filling it with light-grey color.
   (q/background 240)
   ; Set circle color.
   (q/fill 0 139 139)
-  ;; Calculate x and y coordinates of the circle.
+  ;; draw circle
   (q/ellipse 250 250 500 500)
   ;; (q/text-size 35)
 
@@ -100,36 +141,24 @@
   ;; (draw-circle-with-text 250 50 20 "1")
   ;; (draw-circle-with-text 250 450 20 "2")
 
-  (circles-around 3 200)
-  
-  ;; 3 clock
-  ;; (q/text "1"
-  ;;         248 35)
-  ;; (q/text "2"
-  ;;         333 333)
-  ;; (q/text "3"
-  ;;         167 333)
-  ;; 2 clock
-  ;; (q/text "1"
-  ;;         248 35)
-  ;; (q/text "2"
-  ;;         248 (- 500 25))
-  )
+  (circles-around num 200)
+  (box-with-num num))
 
 ; this function is called in index.html
 (defn ^:export run-sketch []
   (q/defsketch my-sketch
     :host "my-sketch"
-    :size [500 500]
+    :size [500 700]
     ; setup function called only once, during sketch initialization.
-    ;; :setup setup
+    :setup setup
     ; update-state is called on each iteration before draw-state.
-    ;; :update update-state
+    :update update-state
     :draw draw-state
     ; This sketch uses functional-mode middleware.
     ; Check quil wiki for more info about middlewares and particularly
     ; fun-mode.
-    :middleware [m/fun-mode]))
+    :middleware [m/fun-mode]
+    ))
 
 ; uncomment this line to reset the sketch:
 ; (run-sketch)
