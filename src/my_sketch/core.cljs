@@ -19,7 +19,7 @@
   (q/background 20) ; dark screen background
   ;; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  {:num 4})
+  {:num 4 :start (q/millis)})
 
 (defn within-plus-circle? []
   (and (> (q/mouse-x) 325)
@@ -33,17 +33,17 @@
        (> (q/mouse-y) 515)
        (< (q/mouse-y) 585)))
 
-
-(defn update-state [{:keys [num] :as state}]
+(defn update-state [{:keys [num start] :as state}]
   ;; TODO use millis to slow down the rate of change here: one click
   ;; should reasonably be one inc/decrement
-  (if (q/mouse-pressed?)
+  (if (and (q/mouse-pressed?) (> (- (q/millis) start) 100))
     (cond
-      (within-plus-circle?) {:num (+ 1 num)}
-      ;; TODO using abs here to avoid weird stuff with negative numbers
+      (within-plus-circle?) {:num (+ 1 num)
+                             :start (q/millis)}
       (within-minus-circle?) {:num (if (> num 0)
                                      (- num 1)
-                                     num)}
+                                     num)
+                              :start (q/millis)}
       :else state)
     state))
 
