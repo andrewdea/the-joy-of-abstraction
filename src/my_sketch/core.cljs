@@ -56,16 +56,17 @@
   ;; (js/console.log "(re-matches digit displayed-num) : " (re-matches
   ;; #"\d*" displayed-num))
   (if (and awaiting-input (q/key-pressed?) (check-time start :gap
-                                                       150))
-    (let [key (q/raw-key)]
+                                                       200))
+    (let [key (q/raw-key)
+          parsed (if (re-matches #"\d*" displayed-num) (js/parseInt displayed-num) num)]
       ;; (js/console.log "(q/raw-key) : " (q/raw-key))
       ;; (js/console.log "key-code : " key-code)
       ;; (js/console.log "(= 8 key-code) : " (= 8 key-code))
-      (js/console.log "displayed-num : " displayed-num)
-      (js/console.log "parsed: " (if (re-matches #"\d*" displayed-num) (js/parseInt displayed-num) num))
+      ;; (js/console.log "displayed-num : " displayed-num)
+      ;; (js/console.log "parsed: " (if (re-matches #"\d*" displayed-num) (js/parseInt displayed-num) num))
       (cond
         (= "\r" key)
-        {:num (if (re-matches #"\d*" displayed-num) (js/parseInt displayed-num) num)
+        {:num parsed
          :displayed-num
          (if (re-matches #"\d*" displayed-num) displayed-num (str num))
          :start (q/millis)
@@ -160,6 +161,7 @@
 ;;         (q/text i x y)))))
 
 (defn circles-around [num outer-radius]
+  (js/console.log "At line number: 164; num : " num)
   (let [radius 70] ; Radius of each smaller circle
     (doseq [i (range num)]
       (let [angle
