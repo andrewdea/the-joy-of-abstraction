@@ -19,7 +19,10 @@
   (q/background 20) ; dark screen background
   ;; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  {:num 4 :start (q/millis)})
+  (let [num 4]
+    {:num num
+     :start (q/millis)
+     :displayed-num num}))
 
 (defn within-plus-circle? []
   (and (> (q/mouse-x) 325)
@@ -33,17 +36,29 @@
        (> (q/mouse-y) 515)
        (< (q/mouse-y) 585)))
 
+(defn within-text-box? []
+  (and (> (q/mouse-x) 175)
+       (< (q/mouse-x) 275)
+       (> (q/mouse-y) 450)
+       (< (q/mouse-y) 650)))
+
 (defn update-state [{:keys [num start] :as state}]
-  ;; TODO use millis to slow down the rate of change here: one click
-  ;; should reasonably be one inc/decrement
   (if (and (q/mouse-pressed?) (> (- (q/millis) start) 100))
     (cond
       (within-plus-circle?) {:num (+ 1 num)
-                             :start (q/millis)}
+                             :start (q/millis)
+                             :displayed-num (+ 1 num)}
       (within-minus-circle?) {:num (if (> num 0)
                                      (- num 1)
                                      num)
-                              :start (q/millis)}
+                              :start (q/millis)
+                              :displayed-num
+                              (if (> num 0)
+                                     (- num 1)
+                                     num)}
+      (within-text-box?) {:num num
+                          :start start
+                          :displayed-num "..."}
       :else state)
     state))
 
@@ -111,7 +126,7 @@
         (q/text-align :center)
         (q/text text x y)))))
 
-(defn box-with-num [num]
+(defn box-with-num [displayed-num]
   ;; rectangle
   (q/fill 0 0 200)
   (q/rect 175 500 150 100 20)
@@ -119,7 +134,7 @@
   (q/text-size 20)
   (apply q/fill [0,0,0])
   (q/text-align :center)
-  (q/text num 250 550)
+  (q/text displayed-num 250 550)
   ;; circles (buttons to-be) on each side
   (q/fill 0 0 180)
   (q/ellipse 360 550 70 70)
@@ -135,7 +150,7 @@
   (q/text-align :center)
   (q/text "-" 140 550))
 
-(defn draw-state [{:keys [num]}]
+(defn draw-state [{:keys [num displayed-num]}]
   ; Clear the sketch by filling it with light-grey color.
   (q/background 180 100 100)
   ; Set circle color.
@@ -149,7 +164,7 @@
   ;; (draw-circle-with-text 250 450 20 "2")
 
   (circles-around num 200)
-  (box-with-num num))
+  (box-with-num displayed-num))
 
 ; this function is called in index.html
 (defn ^:export run-sketch []
