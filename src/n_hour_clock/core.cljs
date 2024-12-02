@@ -1,4 +1,4 @@
-(ns my-sketch.core
+(ns n-hour-clock.core
   (:require [quil.core :as q :include-macros true]
             [quil.middleware :as m]))
 
@@ -232,8 +232,8 @@
 
 ; this function is called in index.html
 (defn ^:export run-sketch []
-  (q/defsketch my-sketch
-    :host "my-sketch"
+  (q/defsketch n-hour-clock
+    :host "n-hour-clock"
     :size [500 700]
     ; setup function called only once, during sketch initialization.
     :setup setup

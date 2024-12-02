@@ -1,8 +1,8 @@
-(defproject my-sketch "0.1.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :url "http://example.com/FIXME"
-  :license {:name "Eclipse Public License"
-            :url "http://www.eclipse.org/legal/epl-v10.html"}
+(defproject joy-of-abstraction "0.0.1-SNAPSHOT"
+  :description "A playground to explore ideas from Eugenia Cheng's book"
+  :url "TODO"
+  :license {:name "GNU General Public License"
+            :url "TODO"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [quil "3.1.0"]
                  [org.clojure/clojurescript "1.10.520"]]
@@ -18,7 +18,7 @@
              :source-paths ["src"]
              :figwheel true
              :compiler
-             {:main "my_sketch.core"
+             {:main "n_hour_clock.core"
               :output-to "resources/public/js/main.js"
               :output-dir "resources/public/js/development"
               :asset-path "js/development"}}
@@ -26,7 +26,7 @@
             {:id "optimized"
              :source-paths ["src"]
              :compiler
-             {:main "my_sketch.core"
+             {:main "n_hour_clock.core"
               :output-to "resources/public/js/main.js"
               :output-dir "resources/public/js/optimized"
               :asset-path "js/optimized"
