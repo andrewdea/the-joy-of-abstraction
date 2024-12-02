@@ -21,6 +21,7 @@
   (q/color-mode :hsb)
   (let [num 4]
     {:num num
+     :goal num
      :start (q/millis)
      :displayed-num (str num)
      :awaiting-input false}))
@@ -47,7 +48,7 @@
 (defn check-time [start & {:keys [wait] :or {wait 100}}]
   (> (- (q/millis) start) wait))
 
-(defn check-keyboard [{:keys [num displayed-num start awaiting-input]
+(defn check-keyboard [{:keys [num goal displayed-num start awaiting-input]
                        :as state}]
   ;; (js/console.log "in check keyboard")
   ;; (js/console.log "awaiting-input : " awaiting-input)
@@ -66,18 +67,21 @@
       ;; (js/console.log "parsed: " (if (re-matches #"\d*" displayed-num) (js/parseInt displayed-num) num))
       (cond
         (= "\r" key)
-        {:num parsed
+        {:num num
+         :goal parsed
          :displayed-num
          (if (re-matches #"\d*" displayed-num) displayed-num (str num))
          :start (q/millis)
          :awaiting-input false}
         (= "Backspace" key)
-          (if (= "..." displayed-num)
+        (if (= "..." displayed-num)
           {:num num
+           :goal goal
            :displayed-num (str num)
            :start (q/millis)
            :awaiting-input false}
           {:num num
+           :goal goal
            :displayed-num (if (> (.-length displayed-num) 1)
                             (subs displayed-num 0 (- (.-length displayed-num) 1))
                             "...")
@@ -85,6 +89,7 @@
            :awaiting-input awaiting-input})
         (re-matches #"\d*" key)
         {:num num
+         :goal goal
          :displayed-num (str
                          (if (re-matches #"\d*" displayed-num) displayed-num "")
                          key)
@@ -92,34 +97,64 @@
          :awaiting-input awaiting-input}
         :else
         {:num num
+         :goal goal
          :displayed-num (str num)
          :start start
          :awaiting-input false}
         ))
     state))
 
-(defn update-state [{:keys [num start] :as state}]
-  (if (and (q/mouse-pressed?) (check-time start))
-    (cond
-      (within-plus-circle?) {:num (+ 1 num)
-                             :start (q/millis)
-                             :displayed-num (str (+ 1 num))
-                             :awaiting-input false}
-      (within-minus-circle?) {:num (if (> num 0)
-                                     (- num 1)
-                                     num)
-                              :start (q/millis)
-                              :displayed-num
-                              (str (if (> num 0)
-                                     (- num 1)
-                                     num))
-                              :awaiting-input false}
+(defn increment [{:keys [num goal]}]
+  (let [updated-num (+ 1 num)
+        updated-goal (if (> goal updated-num) goal updated-num)]
+    {:num updated-num
+     :start (q/millis)
+     :displayed-num (str updated-goal)
+     :goal updated-goal
+     :awaiting-input false}))
+
+(defn decrement [{:keys [num goal]}]
+  (let [updated-num (if (> num 0)
+                      (- num 1)
+                      num)
+        updated-goal (if (< goal updated-num) goal updated-num)]
+    {:num updated-num
+     :start (q/millis)
+     :goal updated-goal
+     :displayed-num (str updated-goal)
+     :awaiting-input false}))
+
+(defn check-mouse [{:keys [num start goal] :as state}]
+  (cond
+      (within-plus-circle?) (increment state)
+      (within-minus-circle?) (decrement state)
       (within-text-box?) {:num num
                           :start start
+                          :goal goal
                           :displayed-num "..."
                           :awaiting-input true}
-      :else state)
-    (check-keyboard state)))
+      :else state))
+
+(defn check-goal [{:keys [goal num] :as state}]
+  (cond
+    (> goal num)
+    (increment state)
+    (< goal num)
+    (decrement state)
+    :else
+    state))
+
+(defn update-state [{:keys [awaiting-input start] :as state}]
+  (cond
+    (and (q/mouse-pressed?) (check-time start))
+    (check-mouse state)
+
+    (and awaiting-input (q/key-pressed?)
+         (check-time start :gap 300))
+    (check-keyboard state)
+
+    :else
+    (check-goal state)))
 
 ;; (defn draw-state [state]
 ;;   ; Clear the sketch by filling it with light-grey color.
